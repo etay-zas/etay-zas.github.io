@@ -1,127 +1,159 @@
 <!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta charset="utf-8">
-            <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
-            <title>Geological Map!</title>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no' />
+        <title>Geological Israel</title>
 
-            <!-- Leaflet -->
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css" />
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js"></script>
+        <!-- Leaflet -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js"></script>
 
-            <style>
-                body { margin:0; padding:0; }
-                body, table, tr, td, th, div, h1, h2, input { font-family: "Calibri", "Trebuchet MS", "Ubuntu", Serif; font-size: 11pt; }
-                #map { position:absolute; top:0; bottom:0; width:100%; } /* full size */
-                .ctl {
-                    padding: 2px 10px 2px 10px;
-                    background: white;
-                    background: rgba(255,255,255,0.9);
-                    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-                    border-radius: 5px;
-                    text-align: right;
-                }
-                .title {
-                    font-size: 18pt;
-                    font-weight: bold;
-                }
-                .src {
-                    font-size: 10pt;
-                }
+        <link rel="stylesheet" href="https://github.com/lizardtechblog/Leaflet.OpacityControls/tree/master/lib/opacity/Control.Opacity.css" />
+        <script src="https://github.com/lizardtechblog/Leaflet.OpacityControls/tree/master/lib/opacity/Control.Opacity.js"></script>
+        
+        <!-- opacity slider -->
+        <link rel="stylesheet" href="lib/opacity/Control.Opacity.css">
+        <script src="lib/opacity/Control.Opacity.js"></script>
 
-            </style>
+        
+        <script src="lib/jquery/jquery-1.9.1.js"></script>
+        <script src="lib/jquery/jquery-ui-1.10.3.custom.min.js"></script>
+        <link rel="stylesheet" href="lib/jquery/jquery-ui-1.10.3.custom.min.css" />
 
-        </head>
-        <body>
+        <!-- gps button -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-gps@1.7.6/dist/leaflet-gps.min.css" integrity="sha256-SEiu+a6uyz3GN3Uvjrf5Rb5+ToQF4wGvuHLi0hm6nNk=" crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/leaflet-gps@1.7.6/dist/leaflet-gps.min.js" integrity="sha256-maLq9yNa397mj72yqLBqfhX32q0fz6Sm9GTBthqvOhg=" crossorigin="anonymous"></script>
 
+
+        <style>
+            body { margin:0; padding:0; }
+            body, table, tr, td, th, div, h1, h2, input { font-family: "Calibri", "Trebuchet MS", "Ubuntu", Serif; font-size: 11pt; }
+            #map { position:absolute; top:0; bottom:0; width:100%; } /* full size */
+            .ctl {
+                padding: 2px 10px 2px 10px;
+                background: white;
+                background: rgba(255,255,255,0.9);
+                box-shadow: 0 0 15px rgba(0,0,0,0.2);
+                border-radius: 5px;
+                text-align: right;
+            }
+            .title {
+                font-size: 18pt;
+                font-weight: bold;
+            }
+            .src {
+                font-size: 10pt;
+            }
+
+        </style>
+    </head>
+    <body>
         <div id="map"></div>
-
         <script>
-        /* **** Leaflet **** */
+            /* **** Leaflet **** */
 
-        // Base layers
-        //  .. OpenStreetMap
-        var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
+            // Base layers
+            //  .. OpenStreetMap
+            var osm = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'});
 
-        //  .. CartoDB Positron
-        var cartodb = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'});
-
-        //  .. OSM Toner
-        var toner = L.tileLayer('http://{s}.tile.stamen.com/toner/{z}/{x}/{y}.png', {attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'});
-
-        //  .. White background
-        var white = L.tileLayer("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEAAQMAAABmvDolAAAAA1BMVEX///+nxBvIAAAAH0lEQVQYGe3BAQ0AAADCIPunfg43YAAAAAAAAAAA5wIhAAAB9aK9BAAAAABJRU5ErkJggg==");
-
-        // Overlay layers (TMS)
-        var lyr = L.tileLayer('./merged/{z}/{x}/{y}.png', {tms: true, opacity: 1, attribution: ""});
-
-        // Map
-        var map = L.map('map', {
-            center: [32.8440544523, 35.6376919177],
-            zoom: 14,
-            minZoom: 7,
-            maxZoom: 14,
-            layers: [osm, lyr]
-        });
-
-        var basemaps = {"OpenStreetMap": osm, "CartoDB Positron": cartodb, "Stamen Toner": toner, "Without background": white}
-        var overlaymaps = {"merged layer": lyr}
-
-        // Location Control
-        map.locate({setView: true, maxZoom: 16});
-
-        function onLocationFound(e) {
-            var radius = e.accuracy;
-
-            L.marker(e.latlng).addTo(map)
-                .bindPopup("You are within " + radius + " meters from this point").openPopup();
-
-            L.circle(e.latlng, radius).addTo(map);
-        }
-
-        map.on('locationfound', onLocationFound);
-
-        function onLocationError(e) {
-            alert(e.message);
-        }
-
-        map.on('locationerror', onLocationError);
-
-        // Title
-        var title = L.control();
-        title.onAdd = function(map) {
-            this._div = L.DomUtil.create('div', 'ctl title');
-            this.update();
-            return this._div;
-        };
-        title.update = function(props) {
-            this._div.innerHTML = "Geological Map!";
-        };
-        title.addTo(map);
-
-        // Note
-        var src = 'Generated by <a href="http://www.klokan.cz/projects/gdal2tiles/">GDAL2Tiles</a>, Copyright &copy; 2008 <a href="http://www.klokan.cz/">Klokan Petr Pridal</a>,  <a href="http://www.gdal.org/">GDAL</a> &amp; <a href="http://www.osgeo.org/">OSGeo</a> <a href="http://code.google.com/soc/">GSoC</a>';
-        var title = L.control({position: 'bottomleft'});
-        title.onAdd = function(map) {
-            this._div = L.DomUtil.create('div', 'ctl src');
-            this.update();
-            return this._div;
-        };
-        title.update = function(props) {
-            this._div.innerHTML = src;
-        };
-        title.addTo(map);
+            //  .. Google Satelite
+            var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+                maxZoom: 20,
+                subdomains:['mt0','mt1','mt2','mt3']
+            });
 
 
-        // Add base layers
-        L.control.layers(basemaps, overlaymaps, {collapsed: false}).addTo(map);
+            // Overlay layer (TMS)
+            var lyr = L.tileLayer('./merged/{z}/{x}/{y}.png', {tms: true, opacity: 1, attribution: ""});
 
-        // Fit to overlay bounds (SW and NE points with (lat, lon))
-        map.fitBounds([[32.7535269646, 35.7449445376], [32.93458194, 35.5304392979]]);
 
+            // Map
+            var map = L.map('map', {
+                center: [32.8440544523, 35.6376919177],
+                zoom: 14,
+                minZoom: 7,
+                maxZoom: 14,
+                layers: [osm, lyr]
+            });
+
+            var basemaps = {"OpenStreetMap": osm, "Satelite": googleSat}
+            var overlaymaps = {"Geological Israel": lyr}
+
+
+            // Location Control
+            // map.locate({setView: true, watch: true, maxZoom: 16});
+
+            // function onLocationFound(e) {
+            //     var radius = e.accuracy;
+
+            //     L.marker(e.latlng).addTo(map)
+            //         .bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+            //     L.circle(e.latlng, radius).addTo(map);
+            // }
+
+            // map.on('locationfound', onLocationFound);
+
+            // function onLocationError(e) {
+            //     alert(e.message);
+            // }
+
+            // map.on('locationerror', onLocationError);
+
+
+            // GPS Location Button
+            var locationControl = new L.Control.Gps({
+                setView: true,
+                autoCenter: true,
+                textErr: "Playing hide and seek?"
+            });
+            map.addControl(locationControl);
+
+            // Title
+            var title = L.control();
+            title.onAdd = function(map) {
+                this._div = L.DomUtil.create('div', 'ctl title');
+                this.update();
+                return this._div;
+            };
+            title.update = function(props) {
+                this._div.innerHTML = "Geological Map!";
+            };
+            title.addTo(map);
+
+            // Note
+            // var src = 'Generated by <a href="http://www.klokan.cz/projects/gdal2tiles/">GDAL2Tiles</a>, Copyright &copy; 2008 <a href="http://www.klokan.cz/">Klokan Petr Pridal</a>,  <a href="http://www.gdal.org/">GDAL</a> &amp; <a href="http://www.osgeo.org/">OSGeo</a> <a href="http://code.google.com/soc/">GSoC</a>';
+            var src = 'Made by Etay Zaslavsky';
+            var title = L.control({position: 'bottomleft'});
+            title.onAdd = function(map) {
+                this._div = L.DomUtil.create('div', 'ctl src');
+                this.update();
+                return this._div;
+            };
+            title.update = function(props) {
+                this._div.innerHTML = src;
+            };
+            title.addTo(map);
+
+            // Add base layers
+            L.control.layers(basemaps, overlaymaps, {collapsed: false}).addTo(map);
+
+            
+            // Opacity Slider
+            // var higherOpacity = new L.Control.higherOpacity();
+            // map.addControl(higherOpacity);
+            // var lowerOpacity = new L.Control.lowerOpacity();
+            // map.addControl(lowerOpacity);
+            var opacitySlider = new L.Control.opacitySlider();
+            map.addControl(opacitySlider);
+
+            higherOpacity.setOpacityLayer(lyr);
+
+            // Fit to overlay bounds (SW and NE points with (lat, lon))
+            map.fitBounds([[32.7535269646, 35.7449445376], [32.93458194, 35.5304392979]]);
         </script>
-
-        </body>
-        </html>
+    </body>
+</html>
 
         
